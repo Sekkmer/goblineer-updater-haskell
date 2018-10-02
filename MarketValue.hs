@@ -63,12 +63,12 @@ data Item = Item {
     bonuses :: Maybe [Int]
 } deriving (Show, Generic)
 
-noneEmpty :: [Int] -> Maybe [Int]
-noneEmpty [] = Nothing
-noneEmpty a  = Just    a
+notEmpty :: [Int] -> Maybe [Int]
+notEmpty [] = Nothing
+notEmpty a  = Just    a
 
 dataToItem :: ([Int], [Double]) -> Item
-dataToItem (itemUID, []) = (Item (head itemUID) 0.0 0.0 0 (noneEmpty (tail itemUID)))
+dataToItem (itemUID, []) = (Item (head itemUID) 0.0 0.0 0 (notEmpty (tail itemUID)))
 dataToItem (itemUID, list)
     | len == 1  = (Item id min min len bon)
     | otherwise = (Item id mVal min len bon)
@@ -77,4 +77,4 @@ dataToItem (itemUID, list)
         id   = head itemUID
         mVal = mValue list len
         min  = head list
-        bon  = noneEmpty (tail itemUID)
+        bon  = notEmpty (tail itemUID)
