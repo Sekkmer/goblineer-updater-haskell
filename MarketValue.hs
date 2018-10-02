@@ -15,6 +15,7 @@ convertImpl []   _   _   _       (ret, sum, i) = (ret, sum `devide` i, i)
 convertImpl list min max percent (ret, sum, i)
     | i >=  max = return
     | i <  min  = recall
+    | ret == [] = recall
     | otherwise =
         if y * percent >= x
             then recall
