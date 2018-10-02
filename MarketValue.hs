@@ -49,4 +49,7 @@ convertFinal_15_30_150_150 list = convertFinal list (len `percent` 15) (len `per
         where len = length list
 
 average :: [Double] -> Double
-average list = (sum list) / (fromIntegral (length list))     
+average list = (sum list) / (fromIntegral (length list))
+
+marketvalue :: [Double] -> Double
+marketvalue list = average (convertFinal_15_30_150_150 list)      

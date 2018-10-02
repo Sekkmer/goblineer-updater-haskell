@@ -13,7 +13,7 @@ import qualified Data.ByteString.Lazy as B
 import Network.HTTP.Conduit (simpleHttp)
 import GHC.Generics
 
-import MarketValue(convertFinal_15_30_150_150, average)
+import MarketValue(marketvalue)
 
 data Bonus = Bonus {
     bonusListId :: Int
@@ -84,7 +84,7 @@ transformS :: Auctions -> Map [Int] [Double]
 transformS (Auctions aucts) = transform aucts empty
 
 pairConvert :: ([Int], [Double]) -> ([Int], Double)
-pairConvert (k, v) = (k, average (convertFinal_15_30_150_150 (sort v)))
+pairConvert (k, v) = (k, marketvalue (sort v))
 
 calculate :: [ ([Int], [Double]) ] -> [ ([Int], Double) ]
 calculate list = map pairConvert list
