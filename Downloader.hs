@@ -72,11 +72,14 @@ toList :: Int -> Int -> [Double]
 toList n count = replicate count ((n `devide` count) / 10000.0)
 
 addAuction :: Map [Int] [Double] -> Auction -> Map [Int] [Double]
-addAuction map (Auction i bout quan list) = case lookupGE aucId map of
-    Nothing     -> insert aucId (toList bout quan) map
-    Just (k, v) -> insert aucId ((toList bout quan) ++ v) (delete k map) 
-    where
-        aucId = auctionGetId (Auction i bout quan list)
+addAuction map (Auction i bout quan list)
+    | bout <= 0 = map
+    | quan <= 0 = map
+    | otherwise = case lookupGE aucId map of
+        Nothing     -> insert aucId (toList bout quan) map
+        Just (k, v) -> insert aucId ((toList bout quan) ++ v) (delete k map) 
+        where
+            aucId = auctionGetId (Auction i bout quan list)
 
 transform :: [Auction] -> Map [Int] [Double] -> Map [Int] [Double]
 transform []     map = map
