@@ -13,7 +13,7 @@ import qualified Data.ByteString.Lazy as B
 import Network.HTTP.Conduit (simpleHttp)
 import GHC.Generics
 
-import MarketValue(convertFinal_15_30_150_150, average)
+import MarketValue(Item, dataToItem)
 
 data Bonus = Bonus {
     bonusListId :: Int
@@ -68,10 +68,13 @@ auctionGetId (Auction i _ _ list) = case list of
 devide :: Int -> Int -> Double
 devide a b = (fromIntegral a) / (fromIntegral b)
 
+toList :: Int -> Int -> [Double]
+toList n count = replicate count ((n `devide` count) / 10000.0)
+
 addAuction :: Map [Int] [Double] -> Auction -> Map [Int] [Double]
 addAuction map (Auction i bout quan list) = case lookupGE aucId map of
-    Nothing     -> insert aucId [(bout `devide` quan)] map
-    Just (k, v) -> insert aucId ([(bout `devide` quan)] ++ v) (delete k map) 
+    Nothing     -> insert aucId (toList bout quan) map
+    Just (k, v) -> insert aucId ((toList bout quan) ++ v) (delete k map) 
     where
         aucId = auctionGetId (Auction i bout quan list)
 
@@ -80,14 +83,8 @@ transform []     map = map
 transform [x]    map = addAuction map x
 transform (x:xs) map = transform xs (addAuction map x)
    
-transformS :: Auctions -> Map [Int] [Double]
-transformS (Auctions aucts) = transform aucts empty
+calculate :: [ ([Int], [Double]) ] -> [Item]
+calculate list = map dataToItem list
 
-pairConvert :: ([Int], [Double]) -> ([Int], Double)
-pairConvert (k, v) = (k, average (convertFinal_15_30_150_150 (sort v)))
-
-calculate :: [ ([Int], [Double]) ] -> [ ([Int], Double) ]
-calculate list = map pairConvert list
-
-final :: Auctions -> [ ([Int], Double) ]
-final aucts = calculate (toAscList (transformS aucts)) 
+final :: Auctions -> [Item]
+final (Auctions aucts) = calculate (toAscList (transform aucts empty)) 
