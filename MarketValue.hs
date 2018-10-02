@@ -2,6 +2,7 @@
 
 module MarketValue where
 
+import Data.List (sort)
 import GHC.Generics (Generic)
 
 percent :: Int -> Double -> Int
@@ -13,7 +14,7 @@ devide a b = a / (fromIntegral b)
 convertImpl :: [Double] -> Int -> Int -> Double -> ([Double], Double, Int) -> ([Double], Double, Int)
 convertImpl []   _   _   _       (ret, sum, i) = (ret, sum `devide` i, i)
 convertImpl list min max percent (ret, sum, i)
-    | i >=  max = return
+    | i >= max  = return
     | i <  min  = recall
     | ret == [] = recall
     | otherwise =
@@ -55,14 +56,18 @@ mValue list len = average (convertFinal list min max 1.5 1.5)
         per30 = (len `percent` 30)
         max   = if per30 <= 4 then 4 else per30
 
-    
 data Item = Item {
     itemId :: Int,
     marketValue :: Double,
     minimum :: Double,
-    count :: Int,
+    quantity :: Int,
     bonuses :: Maybe [Int]
 } deriving (Show, Generic)
+
+data Items = Items { items :: [Item] } deriving (Show, Generic)
+
+toItems :: [Item] -> Items
+toItems list = (Items list)
 
 notEmpty :: [Int] -> Maybe [Int]
 notEmpty [] = Nothing
@@ -74,8 +79,9 @@ dataToItem (itemUID, list)
     | len == 1  = (Item id min min len bon)
     | otherwise = (Item id mVal min len bon)
     where
-        len  = length list
-        id   = head itemUID
-        mVal = mValue list len
-        min  = head list
-        bon  = notEmpty (tail itemUID)
+        len   = length list
+        slist = sort list
+        id    = head itemUID
+        mVal  = mValue slist len
+        min   = head slist
+        bon   = notEmpty (tail itemUID)
