@@ -25,6 +25,6 @@ getJSON = simpleHttp jsonURL
 main :: IO ()
 main = do 
     d <- (eitherDecode <$> getJSON) :: IO (Either String Auctions)
-        case d of
+    case d of
         Left e      -> print "error"
         Right stuff -> I.writeFile "out.json" (encodeToLazyText (final stuff))

@@ -57,11 +57,11 @@ mValue list len = average (convertFinal list min max 1.5 1.5)
         max   = if per30 <= 4 then 4 else per30
 
 data Item = Item {
-    itemId :: Int,
-    marketValue :: Double,
-    minimum :: Double,
+    item :: Int,
+    marketvalue :: Double,
+    min :: Double,
     quantity :: Int,
-    bonuses :: Maybe [Int]
+    bonusIds :: [Int]
 } deriving (Show, Generic)
 
 data Items = Items { items :: [Item] } deriving (Show, Generic)
@@ -74,7 +74,7 @@ notEmpty [] = Nothing
 notEmpty a  = Just    a
 
 dataToItem :: ([Int], [Double]) -> Item
-dataToItem (itemUID, []) = (Item (head itemUID) 0.0 0.0 0 (notEmpty (tail itemUID)))
+dataToItem (itemUID, []) = (Item (head itemUID) 0.0 0.0 0 (tail itemUID))
 dataToItem (itemUID, list)
     | len == 1  = (Item id min min len bon)
     | otherwise = (Item id mVal min len bon)
@@ -84,4 +84,4 @@ dataToItem (itemUID, list)
         id    = head itemUID
         mVal  = mValue slist len
         min   = head slist
-        bon   = notEmpty (tail itemUID)
+        bon   = tail itemUID
