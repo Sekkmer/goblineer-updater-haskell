@@ -26,7 +26,7 @@ bonusToInt (Bonus b) = b
 auctionGetId :: Auction -> [Int] 
 auctionGetId (Auction i _ _ list) = case list of
     Nothing  -> [i] 
-    Just val -> [i] ++ (map bonusToInt val)
+    Just val -> i : (map bonusToInt val)
 
 devide :: Int -> Int -> Double
 devide a b = (fromIntegral a) / (fromIntegral b)

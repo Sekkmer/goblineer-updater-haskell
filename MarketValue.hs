@@ -5,8 +5,8 @@ module MarketValue where
 import Data.List (sort)
 import GHC.Generics (Generic)
 
-percent :: Int -> Double -> Int
-percent n p = round (fromIntegral n * p / 100)
+(%) :: Int -> Double -> Int
+n % p = round (fromIntegral n * p / 100)
 
 devide :: Double -> Int -> Double
 devide a b = a / (fromIntegral b)
@@ -25,7 +25,7 @@ convertImpl list min max percent (ret, sum, i)
         y      = head ret
         x      = head list
         xs     = tail list
-        recall = convertImpl xs min max percent ([x] ++ ret, sum + x, (i + 1))
+        recall = convertImpl xs min max percent (x : ret, sum + x, (i + 1))
         return = (ret, sum `devide` i, i)
 
 convert :: [Double] -> Int -> Int -> Double -> ([Double], Double, Int)
@@ -36,14 +36,12 @@ standardDiv (list, avg, count) = sqrt ((sum (map subSquare list)) `devide` (coun
     where subSquare x = (x - avg) ^ 2
 
 convertFinal :: [Double] -> Int -> Int -> Double -> Double -> [Double]
-convertFinal list min max percent deviation = filter grater convertedList
+convertFinal list min max percent deviation = filter grater cvdList
     where
-        tuple = convert list min max percent
-        first (x, _, _) = x
-        third (_, _, x) = x
-        avg = third tuple
-        convertedList = first tuple
-        stdDiv = standardDiv tuple
+        tuple    = convert list min max percent
+        avg      = (\(_, _, x) -> x) tuple
+        cvdList  = (\(x, _, _) -> x) tuple
+        stdDiv   = standardDiv tuple
         grater x = abs (x - (fromIntegral avg)) >= deviation * stdDiv
 
 average :: [Double] -> Double
@@ -52,8 +50,8 @@ average list = (sum list) / (fromIntegral (length list))
 mValue :: [Double] -> Int -> Double
 mValue list len = average (convertFinal list min max 1.5 1.5)
     where
-        min   = (len `percent` 15)
-        per30 = (len `percent` 30)
+        min   = (len % 15)
+        per30 = (len % 30)
         max   = if per30 <= 4 then 4 else per30
 
 data Item = Item {
