@@ -32,7 +32,7 @@ devide :: Int -> Int -> Double
 devide a b = (fromIntegral a) / (fromIntegral b)
 
 toList :: Int -> Int -> [Double]
-toList n count = replicate count ((n `devide` count) / 10000.0)
+toList n count = replicate count (n `devide` count) 
 
 addAuction :: Map [Int] [Double] -> Auction -> Map [Int] [Double]
 addAuction map (Auction i bout quan list)
