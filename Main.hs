@@ -1,8 +1,11 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import Data.Aeson
 import Data.Aeson.Text (encodeToLazyText)
 import Data.Text.Lazy.IO as I
+import Data.Text.Lazy
+import Data.Text.Internal
 import qualified Data.ByteString.Lazy as B
 import Network.HTTP.Conduit (simpleHttp)
 import System.Console.CmdArgs
@@ -22,7 +25,7 @@ instance ToJSON Info
 instance ToJSON Infos
 
 apiKey :: String
-apiKey = "6szbehcvdvjn8eccd2s496sr92956c87"
+apiKey = ""
 
 apiJsonURL :: String
 apiJsonURL = "https://eu.api.battle.net/wow/auction/data/ragnaros?locale=en_US&apikey=" ++ apiKey
@@ -30,22 +33,33 @@ apiJsonURL = "https://eu.api.battle.net/wow/auction/data/ragnaros?locale=en_US&a
 getApiJSON :: IO B.ByteString
 getApiJSON = simpleHttp apiJsonURL
 
+
 main :: IO ()
-main = do 
+main = do
     d <- (eitherDecode <$> getApiJSON) :: IO (Either String Infos)
     case d of
         Left e      -> print "error"
-        Right stuff -> print (encodeToLazyText (getUrl (transformInfo stuff)))
+        Right stuff -> getAuctions url
+            where
+                url = correctUrl (unpack (encodeToLazyText (getUrl (transformInfo stuff))))
+                correctUrl url = replaceStr url "\"" ""
+                getAuctions url = do
+                    d <- (eitherDecode <$> simpleHttp url) :: IO (Either String Auctions)
+                    case d of
+                        Left e      -> print "error"
+                        Right stuff -> I.writeFile "out.json" (encodeToLazyText (final stuff))
 
-jsonURL :: String
-jsonURL = "http://auction-api-eu.worldofwarcraft.com/auction-data/ad9b89618cc65dbf04bb7757fd7d2f38/auctions.json"
 
-getJSON :: IO B.ByteString
-getJSON = simpleHttp jsonURL
 
--- main :: IO ()
--- main = do 
---     d <- (eitherDecode <$> getJSON) :: IO (Either String Auctions)
---     case d of
---         Left e      -> print "error"
---         Right stuff -> I.writeFile "out.json" (encodeToLazyText (final stuff))
+replaceStr :: String -> String -> String -> String
+replaceStr [] old new = []
+replaceStr str old new = loop str
+  where
+    loop [] = []
+    loop str =
+      let (prefix, rest) = Prelude.splitAt n str
+      in
+        if old == prefix
+        then new ++ loop rest
+        else Prelude.head str : loop (Prelude.tail str)
+    n = Prelude.length old
