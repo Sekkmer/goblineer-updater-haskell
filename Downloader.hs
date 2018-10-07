@@ -7,6 +7,13 @@ import GHC.Generics (Generic)
 
 import MarketValue(Items, Item, dataToItem, toItems)
 
+data Info = Info {
+    url :: String,
+    lastModified :: Int
+} deriving (Show, Generic)
+
+data Infos = Infos { files :: [Info] } deriving (Show, Generic)
+
 data Bonus = Bonus {
     bonusListId :: Int
 } deriving (Show, Generic)
@@ -54,3 +61,12 @@ calculate list = map dataToItem list
 
 final :: Auctions -> Items
 final (Auctions aucts) = toItems (calculate (toAscList (transform aucts empty)))
+
+
+
+
+transformInfo :: Infos -> Info
+transformInfo (Infos (info:infos)) = info
+
+getUrl :: Info -> String
+getUrl (Info x _) = x

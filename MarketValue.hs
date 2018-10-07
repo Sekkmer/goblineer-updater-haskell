@@ -33,7 +33,7 @@ convert list min max percent = convertImpl list min max percent ([], 0, 0)
 
 standardDiv :: ([Double], Double, Int) -> Double
 standardDiv (list, avg, count) = sqrt ((sum (map subSquare list)) `devide` (count - 1))
-    where subSquare x = (x - avg) ^ 2
+    where subSquare x = (x - avg) * (x - avg)
 
 convertFinal :: [Double] -> Int -> Int -> Double -> Double -> [Double]
 convertFinal list min max percent deviation = filter grater cvdList
