@@ -1,80 +1,73 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module MarketValue where
-
-import Data.List (sort)
+module Downloader where
+ 
+import Data.Foldable (foldr')
+import Data.Map (Map, empty, toAscList, insertWith)
 import GHC.Generics (Generic)
 
-(%) :: Int -> Double -> Int
-n % p = round (fromIntegral n * p / 100)
+import MarketValue(Items, Item, dataToItem, toItems)
 
-devide :: Double -> Int -> Double
-devide a b = a / (fromIntegral b)
-
-convertImpl :: [Double] -> Int -> Int -> Double -> ([Double], Double, Int) -> ([Double], Double, Int)
-convertImpl []   _   _   _       (ret, sum, i) = (ret, sum `devide` i, i)
-convertImpl list min max percent (ret, sum, i)
-    | i >= max         = return
-    | i <  min         = recall
-    | ret == []        = recall
-    | y * percent >= x = recall
-    | otherwise        = return
-    where
-        y      = head ret
-        x      = head list
-        xs     = tail list
-        recall = convertImpl xs min max percent (x : ret, sum + x, (i + 1))
-        return = (ret, sum `devide` i, i)
-
-standardDiv :: ([Double], Double, Int) -> Double
-standardDiv (list, avg, count) = sqrt ((sum (map subSquare list)) `devide` (count - 1))
-    where subSquare x = (x - avg) * (x - avg)
-
-convert :: [Double] -> Int -> Int -> Double -> Double -> [Double]
-convert list min max percent deviation = filter grater cvdList
-    where
-        tuple    = convertImpl list min max percent ([], 0, 0) 
-        avg      = (\(_, _, x) -> x) tuple
-        cvdList  = (\(x, _, _) -> x) tuple
-        stdDiv   = standardDiv tuple
-        grater x = abs (x - (fromIntegral avg)) >= deviation * stdDiv
-
-average :: [Double] -> Double
-average list = (sum list) / (fromIntegral (length list))
-
-convertFinal :: [Double] -> Int -> Double
-convertFinal list len = average (convert list min max 1.5 1.5)
-    where
-        min   = (len % 15)
-        per30 = (len % 30)
-        max   = if per30 <= 4 then 4 else per30
-
-data Item = Item {
-    item :: Int,
-    marketvalue :: Double,
-    min :: Double,
-    quantity :: Int,
-    bonusIds :: [Int]
+data Info = Info {
+    url :: String,
+    lastModified :: Int
 } deriving (Show, Generic)
 
-data Items = Items { items :: [Item] } deriving (Show, Generic)
+data Infos = Infos { files :: [Info] } deriving (Show, Generic)
 
-toItems :: [Item] -> Items
-toItems list = (Items list)
+data Bonus = Bonus {
+    bonusListId :: Int
+} deriving (Show, Generic)
 
-notEmpty :: [Int] -> Maybe [Int]
-notEmpty [] = Nothing
-notEmpty a  = Just    a
+data Auction = Auction {
+    item :: Int,
+    buyout :: Int,
+    quantity :: Int,
+    bonusLists :: Maybe [Bonus]
+} deriving (Show, Generic)
 
-dataToItem :: ([Int], [Double]) -> Item
-dataToItem (itemUID, []) = (Item (head itemUID) 0.0 0.0 0 (tail itemUID))
-dataToItem (itemUID, list)
-    | len == 1  = (Item id min min len bon)
-    | otherwise = (Item id mVal min len bon)
+data Auctions = Auctions { auctions :: [Auction] } deriving (Show, Generic)
+
+bonusToInt :: Bonus -> Int
+bonusToInt (Bonus b) = b
+
+devide :: Int -> Int -> Double
+devide a b = (fromIntegral a) / (fromIntegral b)
+
+auctionGetId :: Auction -> [Int] 
+auctionGetId (Auction i _ _ list) = case list of
+    Nothing  -> [i] 
+    Just val -> i : (map bonusToInt val)
+
+auctionGetList :: Auction -> [Double]
+auctionGetList auct 
+    | buyout auct == 0   = []
+    | count == 0 = []
+    | otherwise          = 
+        replicate count ((buyout auct) `devide` count) 
+        where 
+            count = (quantity auct)
+
+insertAuction :: Auction -> Map [Int] [Double] -> Map [Int] [Double]
+insertAuction auct = insertWith (++) key value
     where
-        len   = length list
-        slist = sort list
-        id    = head itemUID
-        mVal  = convertFinal slist len
-        min   = head slist
-        bon   = tail itemUID
+        key   = auctionGetId auct
+        value = auctionGetList auct
+
+transform :: [Auction] -> Map [Int] [Double]
+transform = foldr' insertAuction inti 
+    where
+        inti :: Map [Int] [Double]
+        inti = empty
+
+calculate :: [ ([Int], [Double]) ] -> [Item]
+calculate = map dataToItem
+
+final :: Auctions -> Items
+final = toItems . calculate . toAscList . transform . auctions
+
+transformInfo :: Infos -> Info
+transformInfo =  head . files
+
+getUrl :: Info -> String
+getUrl (Info x _) = x
