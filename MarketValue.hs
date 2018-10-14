@@ -14,17 +14,17 @@ devide a b = a / (fromIntegral b)
 convertImpl :: [Double] -> Int -> Int -> Double -> ([Double], Double, Int) -> ([Double], Double, Int)
 convertImpl []   _   _   _       (ret, sum, i) = (ret, sum `devide` i, i)
 convertImpl list min max percent (ret, sum, i)
-    | i >= max         = return
-    | i <  min         = recall
-    | ret == []        = recall
-    | y * percent >= x = recall
-    | otherwise        = return
-    where
-        y      = head ret
-        x      = head list
-        xs     = tail list
-        recall = convertImpl xs min max percent (x : ret, sum + x, (i + 1))
-        return = (ret, sum `devide` i, i)
+  | i >= max         = return
+  | i <  min         = recall
+  | ret == []        = recall
+  | y * percent >= x = recall
+  | otherwise        = return
+  where
+    y      = head ret
+    x      = head list
+    xs     = tail list
+    recall = convertImpl xs min max percent (x : ret, sum + x, (i + 1))
+    return = (ret, sum `devide` i, i)
 
 standardDiv :: ([Double], Double, Int) -> Double
 standardDiv (list, avg, count) = sqrt ((sum (map subSquare list)) `devide` (count - 1))
@@ -32,29 +32,29 @@ standardDiv (list, avg, count) = sqrt ((sum (map subSquare list)) `devide` (coun
 
 convert :: [Double] -> Int -> Int -> Double -> Double -> [Double]
 convert list min max percent deviation = filter grater cvdList
-    where
-        tuple    = convertImpl list min max percent ([], 0, 0) 
-        avg      = (\(_, _, x) -> x) tuple
-        cvdList  = (\(x, _, _) -> x) tuple
-        stdDiv   = standardDiv tuple
-        grater x = abs (x - (fromIntegral avg)) >= deviation * stdDiv
+  where
+    tuple    = convertImpl list min max percent ([], 0, 0) 
+    avg      = (\(_, _, x) -> x) tuple
+    cvdList  = (\(x, _, _) -> x) tuple
+    stdDiv   = standardDiv tuple
+    grater x = abs (x - (fromIntegral avg)) >= deviation * stdDiv
 
 average :: [Double] -> Double
 average list = (sum list) / (fromIntegral (length list))
 
 convertFinal :: [Double] -> Int -> Double
 convertFinal list len = average (convert list min max 1.5 1.5)
-    where
-        min   = (len % 15)
-        per30 = (len % 30)
-        max   = if per30 <= 4 then 4 else per30
+  where
+    min   = (len % 15)
+    per30 = (len % 30)
+    max   = if per30 <= 4 then 4 else per30
 
 data Item = Item {
-    item :: Int,
-    marketvalue :: Double,
-    min :: Double,
-    quantity :: Int,
-    bonusIds :: [Int]
+  item :: Int,
+  marketvalue :: Double,
+  min :: Double,
+  quantity :: Int,
+  bonusIds :: [Int]
 } deriving (Show, Generic)
 
 data Items = Items { items :: [Item] } deriving (Show, Generic)
@@ -69,12 +69,12 @@ notEmpty a  = Just    a
 dataToItem :: ([Int], [Double]) -> Item
 dataToItem (itemUID, []) = (Item (head itemUID) 0.0 0.0 0 (tail itemUID))
 dataToItem (itemUID, list)
-    | len == 1  = (Item id min min len bon)
-    | otherwise = (Item id mVal min len bon)
-    where
-        len   = length list
-        slist = sort list
-        id    = head itemUID
-        mVal  = convertFinal slist len
-        min   = head slist
-        bon   = tail itemUID
+  | len == 1  = (Item id min min len bon)
+  | otherwise = (Item id mVal min len bon)
+  where
+    len   = length list
+    slist = sort list
+    id    = head itemUID
+    mVal  = convertFinal slist len
+    min   = head slist
+    bon   = tail itemUID
