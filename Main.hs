@@ -10,7 +10,6 @@ import Data.Text.Internal
 import qualified Data.ByteString.Lazy as B
 import Network.HTTP.Conduit (simpleHttp)
 import System.Console.CmdArgs
-import System.IO.Unsafe
 
 import Downloader (Info, Infos, Auctions, Auction, Bonus, final, transformInfo, getUrl)
 import MarketValue (Items, Item)
@@ -28,39 +27,36 @@ instance ToJSON Infos
 
 
 data Args = Args {
-    region :: String, 
-    realm :: String,
-    apikey :: String
+  region :: String,
+  realm :: String,
+  apikey :: String
 } deriving (Show, Data, Typeable)
 arguments = Args{region = def, realm = def, apikey = def}
 
 apiJsonURL :: IO String
-apiJsonURL = do 
-    a <- region <$> cmdArgs arguments
-    b <- realm <$> cmdArgs arguments
-    c <- apikey <$> cmdArgs arguments
-    return $ "https://" ++ a ++ ".api.battle.net/wow/auction/data/"++ b ++"?locale=en_US&apikey="++ c
+apiJsonURL = do
+  a <- region <$> cmdArgs arguments
+  b <- realm <$> cmdArgs arguments
+  c <- apikey <$> cmdArgs arguments
+  return $ "https://" ++ a ++ ".api.battle.net/wow/auction/data/"++ b ++"?locale=en_US&apikey="++ c
 
 getApiJSON :: IO B.ByteString
-getApiJSON = simpleHttp (unsafePerformIO apiJsonURL)
-
+getApiJSON = do apiJsonURL >>= simpleHttp
 
 main :: IO ()
 main = do
-    d <- (eitherDecode <$> getApiJSON) :: IO (Either String Infos)
-    case d of
-        Left e      -> print "error"
-        Right stuff -> getAuctions url
-            where
-                url = correctUrl (unpack (encodeToLazyText (getUrl (transformInfo stuff))))
-                correctUrl url = replaceStr url "\"" ""
-                getAuctions url = do
-                    d <- (eitherDecode <$> simpleHttp url) :: IO (Either String Auctions)
-                    case d of
-                        Left e      -> print "error"
-                        Right stuff -> I.writeFile "out.json" (encodeToLazyText (final stuff))
-
-
+  d <- (eitherDecode <$> getApiJSON) :: IO (Either String Infos)
+  case d of
+    Left e      -> print "error"
+    Right stuff -> getAuctions url
+      where
+        url = correctUrl (unpack (encodeToLazyText (getUrl (transformInfo stuff))))
+        correctUrl url = replaceStr url "\"" ""
+        getAuctions url = do
+          d <- (eitherDecode <$> simpleHttp url) :: IO (Either String Auctions)
+          case d of
+            Left e      -> print "error"
+            Right stuff -> I.writeFile "out.json" (encodeToLazyText (final stuff))
 
 replaceStr :: String -> String -> String -> String
 replaceStr [] old new = []
