@@ -28,7 +28,7 @@ data Auction = Auction {
 
 data Auctions = Auctions { auctions :: [Auction] } deriving (Show, Generic)
 
-type UItemData = ([Int], [Double])
+type UItem = ([Int], [Double])
 type UItemMap = Map [Int] [Double]
 
 
@@ -52,17 +52,17 @@ auctionGetList auct
     where 
       count = (quantity auct)
 
-auctionToKVPair :: Auction -> UItemData
-auctionToKVPair a = (auctionGetId a, auctionGetList a)
+auctionToUItem :: Auction -> UItem
+auctionToUItem a = (auctionGetId a, auctionGetList a)
 
 insertPairWith :: Ord k => (a -> a -> a) -> (k, a) -> Map k a -> Map k a
 insertPairWith inserter (k, a) = insertWith inserter k a
 
-insertAuction :: UItemData -> UItemMap -> UItemMap
-insertAuction = insertPairWith (++) 
+insertUItem :: UItem -> UItemMap -> UItemMap
+insertUItem = insertPairWith (++) 
 
 toUItemMap :: [Auction] -> UItemMap
-toUItemMap = foldr' insertAuction (empty :: UItemMap) . map auctionToKVPair
+toUItemMap = foldr' insertUItem (empty :: UItemMap) . map auctionToUItem
 
 auctionsToItems :: Auctions -> Items
 auctionsToItems = toItems . map dataToItem . toAscList . toUItemMap . auctions
