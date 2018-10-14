@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
 module Main where
 
 import Data.Aeson
@@ -24,7 +23,6 @@ instance ToJSON Item
 instance ToJSON Items
 instance ToJSON Info
 instance ToJSON Infos
-
 
 data Args = Args {
   region :: String,
