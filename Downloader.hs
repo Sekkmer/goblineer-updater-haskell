@@ -63,8 +63,8 @@ transform = foldr' insertAuction inti
 calculate :: [ ([Int], [Double]) ] -> [Item]
 calculate = map dataToItem
 
-final :: Auctions -> Items
-final = toItems . calculate . toAscList . transform . auctions
+auctionsToItems :: Auctions -> Items
+auctionsToItems = toItems . calculate . toAscList . transform . auctions
 
 transformInfo :: Infos -> Info
 transformInfo =  head . files
