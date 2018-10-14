@@ -55,10 +55,7 @@ insertAuction auct = insertWith (++) key value
     value = auctionGetList auct
 
 transform :: [Auction] -> Map [Int] [Double]
-transform = foldr' insertAuction inti 
-  where
-    inti :: Map [Int] [Double]
-    inti = empty
+transform = foldr' insertAuction (empty :: Map [Int] [Double])
 
 calculate :: [ ([Int], [Double]) ] -> [Item]
 calculate = map dataToItem
