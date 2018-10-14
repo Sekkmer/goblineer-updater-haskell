@@ -66,8 +66,5 @@ calculate = map dataToItem
 auctionsToItems :: Auctions -> Items
 auctionsToItems = toItems . calculate . toAscList . transform . auctions
 
-transformInfo :: Infos -> Info
-transformInfo =  head . files
-
-getUrl :: Info -> String
-getUrl (Info x _) = x
+getUrlFromInfos :: Infos -> String
+getUrlFromInfos = url . head . files
