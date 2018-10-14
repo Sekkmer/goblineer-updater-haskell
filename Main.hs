@@ -12,7 +12,7 @@ import System.Console.CmdArgs (Data, Typeable, cmdArgs, def)
 
 import Prelude hiding (writeFile)
 
-import Downloader (Info, Infos, Auctions, Auction, Bonus, auctionsToItems, transformInfo, getUrl)
+import Downloader (Info, Infos, Auctions, Auction, Bonus, auctionsToItems, getUrlFromInfos)
 import MarketValue (Items, Item)
 
 instance FromJSON Info
@@ -53,6 +53,6 @@ decodeAndDoRight fun response = do
 main :: IO ()
 main = decodeAndDoRight processInfos getApiJSON
   where
-    getURL = filter ('"'/=) . unpack . encodeToLazyText . getUrl . transformInfo
+    getURL = filter ('"'/=) . unpack . encodeToLazyText . getUrlFromInfos
     write = writeFile "out.json" . encodeToLazyText . auctionsToItems
     processInfos = decodeAndDoRight write . simpleHttp . getURL 
