@@ -3,14 +3,15 @@ module Main where
 
 import Data.Aeson
 import Data.Aeson.Text (encodeToLazyText)
-import Data.Text.Lazy.IO as I
-import Data.Text.Lazy
-import Data.Text.Internal
+import Data.Text.Lazy.IO (writeFile)
+import Data.Text.Lazy (unpack)
 import qualified Data.ByteString.Lazy as B
 import Network.HTTP.Conduit (simpleHttp)
-import System.Console.CmdArgs
+import System.Console.CmdArgs (Data, Typeable, cmdArgs, def)
 
-import Downloader (Info, Infos, Auctions, Auction, Bonus, final, transformInfo, getUrl)
+import Prelude hiding (writeFile)
+
+import Downloader (Info, Infos, Auctions, Auction, Bonus, auctionsToItems, transformInfo, getUrl)
 import MarketValue (Items, Item)
 
 instance FromJSON Info
@@ -40,31 +41,17 @@ apiJsonURL = do
 
 getApiJSON :: IO B.ByteString
 getApiJSON = do apiJsonURL >>= simpleHttp
+    
+decodeAndDoRight :: FromJSON a => (a -> IO ()) -> IO B.ByteString -> IO ()
+decodeAndDoRight fun response = do
+  d <- (eitherDecode <$> response)
+  case d of
+    Left error  -> print error
+    Right stuff -> fun stuff
 
 main :: IO ()
-main = do
-  d <- (eitherDecode <$> getApiJSON) :: IO (Either String Infos)
-  case d of
-    Left e      -> print "error"
-    Right stuff -> getAuctions url
-      where
-        url = correctUrl (unpack (encodeToLazyText (getUrl (transformInfo stuff))))
-        correctUrl url = replaceStr url "\"" ""
-        getAuctions url = do
-          d <- (eitherDecode <$> simpleHttp url) :: IO (Either String Auctions)
-          case d of
-            Left e      -> print "error"
-            Right stuff -> I.writeFile "out.json" (encodeToLazyText (final stuff))
-
-replaceStr :: String -> String -> String -> String
-replaceStr [] old new = []
-replaceStr str old new = loop str
+main = do decodeAndDoRight processInfos getApiJSON
   where
-    loop [] = []
-    loop str =
-      let (prefix, rest) = Prelude.splitAt n str
-      in
-        if old == prefix
-        then new ++ loop rest
-        else Prelude.head str : loop (Prelude.tail str)
-    n = Prelude.length old
+    getURL = filter ('"'/=) . unpack . encodeToLazyText . getUrl . transformInfo
+    write = writeFile "out.json" . encodeToLazyText . auctionsToItems
+    processInfos = do decodeAndDoRight write . simpleHttp . getURL 
