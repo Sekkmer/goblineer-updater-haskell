@@ -31,7 +31,6 @@ data Auctions = Auctions { auctions :: [Auction] } deriving (Show, Generic)
 type UItem = ([Int], [Double])
 type UItemMap = Map [Int] [Double]
 
-
 bonusToInt :: Bonus -> Int
 bonusToInt (Bonus b) = b
 
