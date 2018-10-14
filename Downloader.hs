@@ -28,6 +28,10 @@ data Auction = Auction {
 
 data Auctions = Auctions { auctions :: [Auction] } deriving (Show, Generic)
 
+type UItemData = ([Int], [Double])
+type UItemMap = Map [Int] [Double]
+
+
 bonusToInt :: Bonus -> Int
 bonusToInt (Bonus b) = b
 
@@ -48,20 +52,20 @@ auctionGetList auct
     where 
       count = (quantity auct)
 
-insertAuction :: Auction -> Map [Int] [Double] -> Map [Int] [Double]
-insertAuction auct = insertWith (++) key value
-  where
-    key   = auctionGetId auct
-    value = auctionGetList auct
+auctionToKVPair :: Auction -> UItemData
+auctionToKVPair a = (auctionGetId a, auctionGetList a)
 
-transform :: [Auction] -> Map [Int] [Double]
-transform = foldr' insertAuction (empty :: Map [Int] [Double])
+insertPairWith :: Ord k => (a -> a -> a) -> (k, a) -> Map k a -> Map k a
+insertPairWith inserter (k, a) = insertWith inserter k a
 
-calculate :: [ ([Int], [Double]) ] -> [Item]
-calculate = map dataToItem
+insertAuction :: UItemData -> UItemMap -> UItemMap
+insertAuction = insertPairWith (++) 
+
+toUItemMap :: [Auction] -> UItemMap
+toUItemMap = foldr' insertAuction (empty :: UItemMap) . map auctionToKVPair
 
 auctionsToItems :: Auctions -> Items
-auctionsToItems = toItems . calculate . toAscList . transform . auctions
+auctionsToItems = toItems . map dataToItem . toAscList . toUItemMap . auctions
 
 getUrlFromInfos :: Infos -> String
-getUrlFromInfos = url . head . files
+getUrlFromInfos = url . head . files 
