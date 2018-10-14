@@ -38,18 +38,18 @@ devide :: Int -> Int -> Double
 devide a b = (fromIntegral a) / (fromIntegral b)
 
 auctionGetId :: Auction -> [Int] 
-auctionGetId (Auction i _ _ list) = case list of
-  Nothing  -> [i] 
-  Just val -> i : (map bonusToInt val)
+auctionGetId auction = case bonusLists auction of
+  Nothing  -> [item auction] 
+  Just val ->  item auction : map bonusToInt val
 
 auctionGetList :: Auction -> [Double]
 auctionGetList auct 
   | buyout auct == 0   = []
   | count == 0 = []
   | otherwise          = 
-    replicate count ((buyout auct) `devide` count) 
+    replicate count $ (buyout auct) `devide` count
     where 
-      count = (quantity auct)
+      count = quantity auct
 
 auctionToUItem :: Auction -> UItem
 auctionToUItem a = (auctionGetId a, auctionGetList a)
@@ -67,4 +67,4 @@ auctionsToItems :: Auctions -> Items
 auctionsToItems = toItems . map dataToItem . toAscList . toUItemMap . auctions
 
 getUrlFromInfos :: Infos -> String
-getUrlFromInfos = url . head . files 
+getUrlFromInfos = url . head . files
