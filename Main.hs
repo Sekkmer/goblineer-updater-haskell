@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings, DeriveDataTypeable #-}
+
 module Main where
 
 import Data.Aeson
@@ -22,14 +23,14 @@ instance FromJSON Auctions
 
 instance ToJSON Item
 instance ToJSON Items
-instance ToJSON Info
-instance ToJSON Infos
 
 data Args = Args {
   region :: String,
   realm :: String,
   apikey :: String
 } deriving (Show, Data, Typeable)
+
+arguments :: Args
 arguments = Args{region = def, realm = def, apikey = def}
 
 apiJsonURL :: IO String
@@ -40,7 +41,7 @@ apiJsonURL = do
   return $ "https://" ++ a ++ ".api.battle.net/wow/auction/data/"++ b ++"?locale=en_US&apikey="++ c
 
 getApiJSON :: IO B.ByteString
-getApiJSON = do apiJsonURL >>= simpleHttp
+getApiJSON = apiJsonURL >>= simpleHttp
     
 decodeAndDoRight :: FromJSON a => (a -> IO ()) -> IO B.ByteString -> IO ()
 decodeAndDoRight fun response = do
@@ -50,8 +51,8 @@ decodeAndDoRight fun response = do
     Right stuff -> fun stuff
 
 main :: IO ()
-main = do decodeAndDoRight processInfos getApiJSON
+main = decodeAndDoRight processInfos getApiJSON
   where
     getURL = filter ('"'/=) . unpack . encodeToLazyText . getUrl . transformInfo
     write = writeFile "out.json" . encodeToLazyText . auctionsToItems
-    processInfos = do decodeAndDoRight write . simpleHttp . getURL 
+    processInfos = decodeAndDoRight write . simpleHttp . getURL 
