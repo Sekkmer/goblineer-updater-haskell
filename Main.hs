@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 module Main where
 
 import Data.Aeson
@@ -9,6 +10,7 @@ import Data.Text.Internal
 import qualified Data.ByteString.Lazy as B
 import Network.HTTP.Conduit (simpleHttp)
 import System.Console.CmdArgs
+import System.IO.Unsafe
 
 import Downloader (Info, Infos, Auctions, Auction, Bonus, final, transformInfo, getUrl)
 import MarketValue (Items, Item)
@@ -24,14 +26,23 @@ instance ToJSON Items
 instance ToJSON Info
 instance ToJSON Infos
 
-apiKey :: String
-apiKey = ""
 
-apiJsonURL :: String
-apiJsonURL = "https://eu.api.battle.net/wow/auction/data/ragnaros?locale=en_US&apikey=" ++ apiKey
+data Args = Args {
+    region :: String, 
+    realm :: String,
+    apikey :: String
+} deriving (Show, Data, Typeable)
+arguments = Args{region = def, realm = def, apikey = def}
+
+apiJsonURL :: IO String
+apiJsonURL = do 
+    a <- region <$> cmdArgs arguments
+    b <- realm <$> cmdArgs arguments
+    c <- apikey <$> cmdArgs arguments
+    return $ "https://" ++ a ++ ".api.battle.net/wow/auction/data/"++ b ++"?locale=en_US&apikey="++ c
 
 getApiJSON :: IO B.ByteString
-getApiJSON = simpleHttp apiJsonURL
+getApiJSON = simpleHttp (unsafePerformIO apiJsonURL)
 
 
 main :: IO ()
