@@ -57,11 +57,8 @@ auctionToUItem a = (auctionGetId a, auctionGetList a)
 insertPairWith :: Ord k => (a -> a -> a) -> (k, a) -> Map k a -> Map k a
 insertPairWith inserter (k, a) = insertWith inserter k a
 
-insertUItem :: UItem -> UItemMap -> UItemMap
-insertUItem = insertPairWith (++) 
-
 toUItemMap :: [Auction] -> UItemMap
-toUItemMap = foldr' insertUItem (empty :: UItemMap) . map auctionToUItem
+toUItemMap = foldr' (insertPairWith (++)) (empty :: UItemMap) . map auctionToUItem
 
 auctionsToItems :: Auctions -> Items
 auctionsToItems = toItems . map dataToItem . toAscList . toUItemMap . auctions
